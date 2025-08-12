@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <script src="main.js"></script> 
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Рулетка - Игровое приложение</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: white;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        .stars {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .star {
+            position: absolute;
+            color: rgba(255, 255, 255, 0.3);
+            font-size: 16px;
+            animation: twinkle 3s infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 0.8; }
+        }
+
+        .app-container {
+            max-width: 400px;
+            margin: 0 auto;
+            min-height: 100vh;
+            position: relative;
+            z-index: 2;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 20px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .close-btn {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .online-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+
+        .online-dot {
+            width: 8px;
+            height: 8px;
+            background: #4CAF50;
+            border-radius: 50%;
+        }
+
+        /* Общие стили для секций */
+        .section {
+            display: none;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Стили для раздела Rolls */
+        .top-icons {
+            display: flex;
+            gap: 12px;
+            padding: 0 20px;
+            margin-bottom: 20px;
+        }
+
+        .icon-item {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            position: relative;
+        }
+
+        .icon-item img {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            position: relative;
+        }
+
+        .prize-pool {
+            background: rgba(255,255,255,0.1);
+            margin: 0 20px;
+            padding: 12px 16px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            cursor: pointer;
+        }
+
+        .prize-badge {
+            background: #FFC107;
+            color: #000;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .wheel-container {
+            display: flex;
+            justify-content: center;
+            margin: 40px 0;
+            position: relative;
+        }
+
+        .wheel {
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            position: relative;
+            overflow: hidden;
+            transition: transform 3s cubic-bezier(0.23, 1, 0.32, 1);
+            box-shadow: 0 0 30px rgba(0,0,0,0.5);
+            background: conic-gradient(
+                from 0deg,
+                #4A90E2 0deg 45deg,
+                #F5A623 45deg 90deg,
+                #D0021B 90deg 135deg,
+                #BD10E0 135deg 180deg,
+                #B8E986 180deg 225deg,
+                #50E3C2 225deg 270deg,
+                #7ED321 270deg 315deg,
+                #9013FE 315deg 360deg
+            );
+        }
+
+        .wheel-segment {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            transform-origin: 0 0;
+        }
+
+        .segment-icon {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            transform-origin: 0 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .segment-icon img {
+            width: 50px;
+            height: 50px;
+            object-fit: contain;
+        }
+
+        .wheel-segment:nth-child(1) .segment-icon { 
+            transform: rotate(22.5deg) translate(70px, -20px); 
+        }
+        .wheel-segment:nth-child(2) .segment-icon { 
+            transform: rotate(67.5deg) translate(70px, -20px); 
+        }
+        .wheel-segment:nth-child(3) .segment-icon { 
+            transform: rotate(112.5deg) translate(70px, -20px); 
+        }
+        .wheel-segment:nth-child(4) .segment-icon { 
+            transform: rotate(157.5deg) translate(70px, -20px); 
+        }
+        .wheel-segment:nth-child(5) .segment-icon { 
+            transform: rotate(202.5deg) translate(70px, -20px); 
+        }
+        .wheel-segment:nth-child(6) .segment-icon { 
+            transform: rotate(247.5deg) translate(70px, -20px); 
+        }
+        .wheel-segment:nth-child(7) .segment-icon { 
+            transform: rotate(292.5deg) translate(70px, -20px); 
+        }
+        .wheel-segment:nth-child(8) .segment-icon { 
+            transform: rotate(337.5deg) translate(70px, -20px); 
+        }
+
+        .wheel-pointer {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-top: 30px solid white;
+            z-index: 10;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+        }
+
+        .wheel-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80px;
+            height: 80px;
+            background: rgba(0,0,0,0.8);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 5;
+            color: white;
+            font-size: 12px;
+            text-align: center;
+            border: 3px solid white;
+        }
+
+        /* Новые стили для селектора ставок */
+        .bet-selector {
+            margin: 0 20px 20px;
+            background: rgba(255,255,255,0.1);
+            padding: 16px;
+            border-radius: 12px;
+        }
+
+        .bet-controls {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .bet-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .bet-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: scale(1.1);
+        }
+
+        .bet-btn:active {
+            transform: scale(0.9);
+        }
+
+        .bet-amount {
+            font-size: 24px;
+            font-weight: bold;
+            color: #FFC107;
+        }
+
+        .bet-label {
+            text-align: center;
+            font-size: 14px;
+            color: rgba(255,255,255,0.7);
+        }
+
+        .luck-btn {
+            background: linear-gradient(135deg, #FFC107, #FF9800);
+            border: none;
+            color: #000;
+            padding: 16px 32px;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 16px auto 0;
+            display: block;
+            width: 120px;
+            box-shadow: 0 4px 15px rgba(255, 193, 7, 0.4);
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+
+        .luck-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 193, 7, 0.5);
+            background: linear-gradient(135deg, #FFD700, #FFC107);
+        }
+
+        .luck-btn:active {
+            transform: scale(0.95);
+        }
+
+        .roll-button:active {
+            transform: scale(0.98);
+        }
+
+        .roll-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* Стили для PvP рулетки */
+        .pvp-stats {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 20px;
+            padding: 12px 24px;
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            font-weight: 600;
+            margin: 0 20px 30px;
+        }
+
+        .pvp-roulette-container {
+            position: relative;
+            width: 350px;
+            height: 350px;
+            margin: 0 auto 40px;
+        }
+
+        .pvp-roulette-wheel {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            position: relative;
+            transition: transform 3s cubic-bezier(0.23, 1, 0.32, 1);
+            background: conic-gradient(
+                from 0deg,
+                #4ade80 0deg 90deg,
+                #facc15 90deg 120deg,
+                #f87171 120deg 210deg,
+                #fbbf24 210deg 300deg,
+                #22c55e 300deg 360deg
+            );
+        }
+
+        .pvp-roulette-wheel.spinning {
+            transform: rotate(1800deg);
+        }
+
+        .player-avatar {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 3px solid white;
+            background: #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .avatar-1 {
+            top: 20px;
+            right: 80px;
+            background: #ef4444;
+        }
+
+        .avatar-2 {
+            bottom: 80px;
+            right: 20px;
+            background: #f59e0b;
+        }
+
+        .avatar-3 {
+            bottom: 20px;
+            left: 80px;
+            background: #10b981;
+        }
+
+        .pvp-center-circle {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 120px;
+            height: 120px;
+            background: #1a1a1a;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            z-index: 5;
+        }
+
+        .timer-label {
+            color: #888;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .timer {
+            font-size: 28px;
+            font-weight: 700;
+            color: white;
+        }
+
+        .pvp-pointer {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-top: 20px solid white;
+            z-index: 10;
+        }
+
+        .pvp-controls {
+            display: flex;
+            gap: 20px;
+            width: 100%;
+            max-width: 400px;
+            padding: 0 20px;
+            margin-bottom: 20px;
+        }
+
+        .control-btn {
+            flex: 1;
+            padding: 16px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            border-radius: 16px;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            transition: all 0.2s ease;
+        }
+
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .control-btn:active {
+            transform: translateY(0);
+        }
+
+        .control-btn.primary {
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+        }
+
+        .control-btn.primary:hover {
+            background: linear-gradient(135deg, #16a34a, #15803d);
+        }
+
+        /* Ожидание PvP */
+        .waiting-message {
+            text-align: center;
+            padding: 40px 20px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .waiting-message h3 {
+            margin-bottom: 10px;
+            font-size: 24px;
+            color: white;
+        }
+
+        /* Нижняя навигация */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 400px;
+            background: rgba(0,0,0,0.9);
+            padding: 12px 0;
+            display: flex;
+            justify-content: space-around;
+            z-index: 100;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            color: rgba(255,255,255,0.7);
+            font-size: 12px;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 12px;
+            transition: all 0.2s ease;
+        }
+
+        .nav-item.active {
+            color: #FFC107;
+            background: rgba(255, 193, 7, 0.1);
+        }
+
+        .nav-icon {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        /* Попапы */
+        .backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            z-index: 99;
+            display: none;
+        }
+
+        .backdrop.show {
+            display: block;
+        }
+
+        .result-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            z-index: 100;
+            display: none;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+        }
+
+        .result-popup.show {
+            display: block;
+            animation: popupShow 0.5s ease-out;
+        }
+
+        @keyframes popupShow {
+            from { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+            to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        }
+
+        .winner-text {
+            font-size: 24px;
+            font-weight: 700;
+            color: #22c55e;
+            margin-bottom: 10px;
+        }
+
+        .winner-name {
+            font-size: 32px;
+            font-weight: 800;
+            margin-bottom: 20px;
+        }
+
+        .close-result {
+            padding: 12px 24px;
+            background: #FFC107;
+            border: none;
+            border-radius: 12px;
+            color: #000;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        /* Prize Pool Modal */
+        .prize-pool-modal {
+            position: fixed;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 400px;
+            height: 100vh;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            z-index: 200;
+            display: none;
+            overflow-y: auto;
+        }
+
+        .prize-pool-modal.show {
+            display: block;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from { transform: translateX(-50%) translateY(-100%); }
+            to { transform: translateX(-50%) translateY(0); }
+        }
+
+        .prize-pool-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            font-size: 24px;
+            font-weight: bold;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .prize-pool-close {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .prize-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            padding: 20px;
+        }
+
+        .prize-item {
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .prize-item-icon {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+        }
+
+        .prize-item-icon img {
+            width: 50px;
+            height: 50px;
+            object-fit: contain;
+        }
+
+        .prize-item-name {
+            font-size: 12px;
+            font-weight: 600;
+            color: white;
+            margin-top: 8px;
+        }
+
+        .prize-done-btn {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: calc(100% - 40px);
+            max-width: 360px;
+            background: white;
+            color: black;
+            border: none;
+            padding: 16px;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="stars" id="stars"></div>
+    
+    <div class="app-container">
+        <div class="header">
+            <button class="close-btn">✕ Закрыть</button>
+            <div class="online-status">
+                <div class="online-dot"></div>
+                <span id="onlineCount">61</span> онлайн
+            </div>
+        </div>
+
+        <!-- Раздел PvP -->
+        <div class="section" id="pvp-section">
+            <div class="pvp-stats">
+                <span id="playerCount">0 ИГРОКОВ</span>
+                <span>|</span>
+                <span id="totalBet">0.00 TON</span>
+            </div>
+
+            <div id="pvpWaitingArea" class="waiting-message">
+                <h3>⚔️ PvP Рулетка</h3>
+                <p>Ожидание игроков...<br>Минимум 2 игрока для начала игры</p>
+            </div>
+
+            <div id="pvpGameArea" class="pvp-roulette-container" style="display: none;">
+                <div class="pvp-pointer"></div>
+                <div class="pvp-roulette-wheel" id="pvpRoulette">
+                    <div class="player-avatar avatar-1">P1</div>
+                    <div class="player-avatar avatar-2">P2</div>
+                    <div class="player-avatar avatar-3">P3</div>
+                </div>
+                <div class="pvp-center-circle">
+                    <div class="timer-label">Старт через</div>
+                    <div class="timer" id="pvpTimer">00:05</div>
+                </div>
+            </div>
+
+            <div class="pvp-controls">
+                <button class="control-btn" id="addBet">+ Добавить ставку</button>
+                <button class="control-btn primary" id="joinGame">Войти в игру</button>
+            </div>
+        </div>
+
+        <!-- Раздел Rolls -->
+        <div class="section active" id="rolls-section">
+            <div class="top-icons">
+                <div class="icon-item" style="background: linear-gradient(135deg, #0c1212, #44A08D);"><img src="crystal-ball.png" alt="Кристалл"></div>
+                <div class="icon-item" style="background: linear-gradient(135deg, #080c0c, #FED6E3);"><img src="ring.png" alt="Кольцо"></div>
+                <div class="icon-item" style="background: linear-gradient(135deg, #080806, #FF8008);"><img src="telegram.png" alt="Телега"></div>
+                <div class="icon-item" style="background: linear-gradient(135deg, #080505, #C44569);"><img src="wand.png" alt="Кристалл"></div>
+                <div class="icon-item" style="background: linear-gradient(135deg, #0b1110, #44A08D);"><img src="bowtie.png" alt="Бабочка>"></div>
+            </div>
+
+            <div class="prize-pool" onclick="openPrizePool()">
+                <span>Призовой пул</span>
+                <div class="prize-badge">8</div>
+            </div>
+
+            <div class="prize-pool">
+                <span>💎 Подключить TON Wallet</span>
+            </div>
+
+            <div class="wheel-container">
+                <div class="wheel-pointer"></div>
+                <div class="wheel" id="wheel">
+                    <div class="wheel-segment">
+                        <div class="segment-icon"><img src="crystal-ball.png" alt="Кристалл"></div>
+                    </div>
+                    <div class="wheel-segment">
+                        <div class="segment-icon"><img src="bowtie.png" alt="Бабочка>"></div>
+                    </div>
+                    <div class="wheel-segment">
+                        <div class="segment-icon"><img src="cake.png" alt="Пирог"></div>
+                    </div>
+                    <div class="wheel-segment">
+                        <div class="segment-icon"><img src="ring.png" alt="Кольцо"></div>
+                    </div>
+                    <div class="wheel-segment">
+                        <div class="segment-icon"><img src="strawberry.png" alt="Клубника"></div>
+                    </div>
+                    <div class="wheel-segment">
+                        <div class="segment-icon"><img src="telegram.png" alt="Телега"></div>
+                    </div>
+                    <div class="wheel-segment">
+                        <div class="segment-icon"><img src="ticket.png" alt="Билет"></div>
+                    </div>
+                    <div class="wheel-segment">
+                        <div class="segment-icon"><img src="wand.png" alt="Кристалл"></div>
+                    </div>
+                    <div class="wheel-center">Ожидание</div>
+                </div>
+            </div>
+
+            <!-- Селектор ставок -->
+            <div class="bet-selector">
+                <div class="bet-controls">
+                    <button class="bet-btn" id="decreaseBet">−</button>
+                    <div>
+                        <div class="bet-amount" id="betAmount">⭐ 299</div>
+                    </div>
+                    <button class="bet-btn" id="increaseBet">+</button>
+                </div>
+                <button class="luck-btn" onclick="spinWheel()">LUCK</button>
+            </div>
+        </div>
+
+        <!-- Раздел Инвентарь -->
+        <div class="section" id="inventory-section">
+            <div style="padding: 40px 20px; text-align: center;">
+                <h2 style="margin-bottom: 20px;">🎒 Инвентарь</h2>
+                <p style="color: #888;">Здесь будут отображаться ваши предметы</p>
+            </div>
+        </div>
+
+        <!-- Раздел Магазин -->
+        <div class="section" id="shop-section">
+            <div style="padding: 40px 20px; text-align: center;">
+                <h2 style="margin-bottom: 20px;">🏪 Магазин</h2>
+                <p style="color: #888;">Здесь можно приобрести предметы</p>
+            </div>
+        </div>
+
+        <!-- Раздел Заработок -->
+        <div class="section" id="earn-section">
+            <div style="padding: 40px 20px; text-align: center;">
+                <h2 style="margin-bottom: 20px;">💰 Заработок</h2>
+                <p style="color: #888;">Способы заработка монет</p>
+            </div>
+        </div>
+
+        <!-- Нижняя навигация -->
+        <div class="bottom-nav">
+            <div class="nav-item" data-section="pvp">
+                <div class="nav-icon">⚔️</div>
+                <span>Битва</span>
+            </div>
+            <div class="nav-item active" data-section="rolls">
+                <div class="nav-icon">🎲</div>
+                <span>Go Luck</span>
+            </div>
+            <div class="nav-item" data-section="inventory">
+                <div class="nav-icon">🎒</div>
+                <span>Инвентарь</span>
+            </div>
+            <div class="nav-item" data-section="shop">
+                <div class="nav-icon">🏪</div>
+                <span>Магазин</span>
+            </div>
+            <div class="nav-item" data-section="earn">
+                <div class="nav-icon">💰</div>
+                <span>Заработок</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Попапы -->
+    <div class="backdrop" id="backdrop"></div>
+    <div class="result-popup" id="resultPopup">
+        <h3 id="popupTitle">🎉 Поздравляем!</h3>
+        <p>Вы выиграли: <span id="prize"></span></p>
+        <button class="close-result" onclick="closePopup()">Забрать приз</button>
+    </div>
+
+    <!-- PvP Result Popup -->
+    <div class="result-popup" id="pvpResultPopup">
+        <div class="winner-text">ПОБЕДИТЕЛЬ!</div>
+        <div class="winner-name" id="winnerName">Игрок 1</div>
+        <div style="margin-bottom: 20px; color: #fbbf24;" id="winAmount">+156.75 TON</div>
+        <button class="close-result" onclick="closePvpResult()">Закрыть</button>
+    </div>
+
+    <!-- Prize Pool Modal -->
+    <div class="prize-pool-modal" id="prizePoolModal">
+        <div class="prize-pool-header">
+            <span>Prize Pool</span>
+            <button class="prize-pool-close" onclick="closePrizePool()">×</button>
+        </div>
+        
+        <div class="prize-grid">
+            <div class="prize-item">
+                <div class="prize-item-icon"><img src="crystal-ball.png" alt="Кристалл"></div>
+                <div class="prize-item-name">Crystal Ball</div>
+            </div>
+            <div class="prize-item">
+                <div class="prize-item-icon"><img src="bowtie.png" alt="Бабочка>"></div>
+                <div class="prize-item-name">Bow Tie</div>
+            </div>
+            <div class="prize-item">
+                <div class="prize-item-icon"><img src="cake.png" alt="Пирог"></div>
+                <div class="prize-item-name">Berry Box</div>
+            </div>
+            <div class="prize-item">
+                <div class="prize-item-icon"><img src="ring.png" alt="Кольцо"></div>
+                <div class="prize-item-name">Gem Signet</div>
+            </div>
+            <div class="prize-item">
+                <div class="prize-item-icon"><img src="strawberry.png" alt="Клубника"></div>
+                <div class="prize-item-name">Candy Cane</div>
+            </div>
+            <div class="prize-item">
+                <div class="prize-item-icon"><img src="telegram.png" alt="Телега"></div>
+                <div class="prize-item-name">Diamond Ring</div>
+            </div>
+            <div class="prize-item">
+                <div class="prize-item-icon"><img src="ticket.png" alt="Билет"></div>
+                <div class="prize-item-name">Big Year</div>
+            </div>
+            <div class="prize-item">
+                <div class="prize-item-icon"><img src="wand.png" alt="Кристалл"></div>
+                <div class="prize-item-name">B-Day Candle</div>
+            </div>
+        </div>
+        
+        <button class="prize-done-btn" onclick="closePrizePool()">Done</button>
+    </div>
